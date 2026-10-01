@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Code Generator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:system-ui,sans-serif;
+  background:#0f1420;
+  color:#e0e6f0;
+  min-height:100vh;
+  padding:20px;
+}
+.wrap{max-width:1200px;margin:0 auto}
+
+/* ===== HEADER ===== */
+header{
+  text-align:center;
+  margin-bottom:24px;
+}
+h1{
+  font-size:1.8em;
+  font-weight:300;
+  letter-spacing:3px;
+  background:linear-gradient(90deg,#6dd5ed,#a8edea,#f5a9d0);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  margin-bottom:6px;
+}
+.tag{
+  font-size:.8em;
+  color:#6a7a94;
+  letter-spacing:1px;
+}
+
+/* ===== GRID CHÍNH ===== */
+.grid{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:16px;
+}
+@media(max-width:820px){
+  .grid{grid-template-columns:1fr}
+}
+
+/* ===== SIDEBAR CHỌN LOẠI CODE ===== */
+.side{
+  background:#171d2b;
+  border-radius:14px;
+  padding:16px;
+  border:1px solid #232b3d;
+  height:fit-content;
+}
+.side h2{
+  font-size:.85em;
+  color:#6a7a94;
+  letter-spacing:1.5px;
+  margin-bottom:12px;
+  text-transform:uppercase;
+}
+.cat{
+  font-size:.75em;
+  color:#4a5878;
+  letter-spacing:1px;
+  margin:14px 0 6px;
+  text-transform:uppercase;
+}
+.item{
+  padding:10px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:.9em;
+  color:#a8b5cc;
+  transition:.2s;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:1px solid transparent;
+}
+.item:hover{background:#1e2637;color:#fff}
+.item.active{
+  background:linear-gradient(90deg,#1e3a4d,#1e2637);
+  color:#6dd5ed;
+  border-color:#2d4a5e;
+}
+.item .tag2{
+  font-size:.7em;
+  color:#4a5878;
+  padding:2px 8px;
+  border-radius:10px;
+  background:#0f1420;
+}
+
+/* ===== MAIN PANEL ===== */
+.main{
+  background:#171d2b;
+  border-radius:14px;
+  border:1px solid #232b3d;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:12px 16px;
+  background:#131927;
+  border-bottom:1px solid #232b3d;
+  flex-wrap:wrap;
+}
+.toolbar .title{
+  font-size:.9em;
+  color:#a8b5cc;
+  margin-right:auto;
+  font-weight:500;
+}
+.btn{
+  padding:8px 14px;
+  font-size:.8em;
+  background:#1e2637;
+  color:#a8b5cc;
+  border:1px solid #2d3a52;
+  border-radius:8px;
+  cursor:pointer;
+  transition:.2s;
+  font-weight:500;
+}
+.btn:hover{background:#2a3450;color:#fff}
+.btn.primary{
+  background:linear-gradient(135deg,#6dd5ed,#4ab8d4);
+  color:#fff;
+  border:none;
+}
+.btn.primary:hover{filter:brightness(1.1)}
+
+/* ===== INPUT AREA ===== */
+.inputs{
+  padding:16px;
+  border-bottom:1px solid #232b3d;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+@media(max-width:600px){
+  .inputs{grid-template-columns:1fr}
+}
+.field label{
+  display:block;
+  font-size:.72em;
+  color:#6a7a94;
+  margin-bottom:5px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  padding:9px 12px;
+  background:#0f1420;
+  border:1px solid #2d3a52;
+  border-radius:8px;
+  color:#e0e6f0;
+  font-size:.88em;
+  font-family:inherit;
+  outline:none;
+  transition:.2s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  border-color:#6dd5ed;
+  box-shadow:0 0 0 3px rgba(109,213,237,.15);
+}
+.field.full{grid-column:1/-1}
+.field textarea{resize:vertical;min-height:70px;font-family:monospace}
+
+/* ===== OUTPUT ===== */
+.output{
+  position:relative;
+  flex:1;
+  min-height:400px;
+}
+pre{
+  margin:0;
+  padding:16px;
+  background:#0f1420;
+  color:#a8edea;
+  font-family:Consolas,Monaco,monospace;
+  font-size:.85em;
+  line-height:1.6;
+  overflow:auto;
+  max-height:520px;
+  white-space:pre;
+  tab-size:2;
+}
+pre code{color:#a8edea}
+.copy-toast{
+  position:absolute;
+  top:14px;right:14px;
+  padding:8px 16px;
+  background:#6dd5ed;
+  color:#0f1420;
+  border-radius:8px;
+  font-size:.8em;
+  font-weight:600;
+  opacity:0;
+  pointer-events:none;
+  transition:.3s;
+}
+.copy-toast.show{opacity:1}
+
+/* ===== PREVIEW ===== */
+.preview{
+  padding:16px;
+  border-top:1px solid #232b3d;
+  background:#0f1420;
+}
+.preview h3{
+  font-size:.75em;
+  color:#6a7a94;
+  letter-spacing:1.5px;
+  margin-bottom:10px;
+  text-transform:uppercase;
+}
+.preview iframe{
+  width:100%;
+  height:300px;
+  border:1px solid #2d3a52;
+  border-radius:10px;
+  background:#fff;
+}
+
+/* ===== OPTIONS ===== */
+.options{
+  padding:0 16px 16px;
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.opt{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.8em;
+  color:#a8b5cc;
+  cursor:pointer;
+}
+.opt input{
+  accent-color:#6dd5ed;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <h1>CODE GENERATOR</h1>
+    <p class="tag">Tạo code nhanh - Nhiều loại - Tác dụng tối đa</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="side">
+      <h2>Chọn loại code</h2>
+
+      <div class="cat">Giao diện</div>
+      <div class="item" data-type="button">Nút đẹp <span class="tag2">CSS</span></div>
+      <div class="item" data-type="card">Card <span class="tag2">CSS</span></div>
+      <div class="item" data-type="glass">Kính mờ <span class="tag2">CSS</span></div>
+      <div class="item" data-type="gradient">Nền gradient <span class="tag2">CSS</span></div>
+
+      <div class="cat">Hiệu ứng</div>
+      <div class="item" data-type="fade">Fade In <span class="tag2">CSS</span></div>
+      <div class="item" data-type="pulse">Nhịp thở <span class="tag2">CSS</span></div>
+      <div class="item" data-type="wave">Sóng nước <span class="tag2">CSS</span></div>
+      <div class="item" data-type="loader">Loader <span class="tag2">CSS</span></div>
+
+      <div class="cat">JavaScript</div>
+      <div class="item" data-type="clock">Đồng hồ <span class="tag2">JS</span></div>
+      <div class="item" data-type="countdown">Đếm ngược <span class="tag2">JS</span></div>
+      <div class="item" data-type="typing">Gõ chữ <span class="tag2">JS</span></div>
+      <div class="item" data-type="quote">Lời nhắc <span class="tag2">JS</span></div>
+
+      <div class="cat">Tiện ích</div>
+      <div class="item" data-type="timer">Pomodoro <span class="tag2">JS</span></div>
+      <div class="item" data-type="notes">Ghi chú <span class="tag2">JS</span></div>
+      <div class="item" data-type="todo">Todo list <span class="tag2">JS</span></div>
+      <div class="item" data-type="calc">Máy tính <span class="tag2">JS</span></div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main">
+
+      <div class="toolbar">
+        <span class="title" id="title">Nút đẹp</span>
+        <button class="btn" onclick="reset()">Reset</button>
+        <button class="btn primary" onclick="copyCode()">Copy Code</button>
+      </div>
+
+      <div class="inputs">
+        <div class="field">
+          <label>Tiêu đề / Nội dung</label>
+          <input id="inText" value="Nhấn vào tôi" oninput="gen()">
+        </div>
+        <div class="field">
+          <label>Màu chính</label>
+          <input id="inColor" type="color" value="#6dd5ed" oninput="gen()">
+        </div>
+        <div class="field">
+          <label>Màu phụ</label>
+          <input id="inColor2" type="color" value="#a8edea" oninput="gen()">
+        </div>
+        <div class="field">
+          <label>Kích thước / Số</label>
+          <input id="inSize" type="number" value="16" min="1" max="200" oninput="gen()">
+        </div>
+        <div class="field full">
+          <label>Mô tả / Ghi chú (tùy chọn)</label>
+          <textarea id="inDesc" placeholder="Mô tả ngắn..." oninput="gen()"></textarea>
+        </div>
+      </div>
+
+      <div class="options">
+        <label class="opt"><input type="checkbox" id="optComment" checked onchange="gen()"> Chú thích code</label>
+        <label class="opt"><input type="checkbox" id="optResponsive" checked onchange="gen()"> Responsive</label>
+        <label class="opt"><input type="checkbox" id="optModern" checked onchange="gen()"> CSS hiện đại</label>
+      </div>
+
+      <div class="output">
+        <pre id="code"></pre>
+        <div class="copy-toast" id="toast">Đã copy!</div>
+      </div>
+
+      <div class="preview">
+        <h3>Xem trước</h3>
+        <iframe id="preview"></iframe>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ===== BIẾN ===== */
+let type='button';
+
+/* ===== CHỌN LOẠI ===== */
+document.querySelectorAll('.item').forEach(el=>{
+  el.onclick=()=>{
+    document.querySelectorAll('.item').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    type=el.dataset.type;
+    document.getElementById('title').textContent=el.textContent.trim().split(' ')[0]+' '+el.textContent.trim().split(' ')[1]||type;
+    gen();
+  };
+});
+
+/* ===== LẤY GIÁ TRỊ INPUT ===== */
+function val(id){return document.getElementById(id).value}
+function chk(id){return document.getElementById(id).checked}
+
+/* ===== HÀM TẠO CODE CHÍNH ===== */
+function gen(){
+  const text=val('inText')||'Nội dung';
+  const c1=val('inColor');
+  const c2=val('inColor2');
+  const size=val('inSize')||16;
+  const desc=val('inDesc');
+  const comment=chk('optComment');
+
+  const c = s => comment ? s : '';
+
+  let code='';
+
+  switch(type){
+
+    /* ===== NÚT ĐẸP ===== */
+    case 'button':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Button</title>
+<style>
+${c('/* Nút gradient bo tròn, hover nâng lên */')}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+}
+.btn{
+  padding:${size}px ${size*2}px;              ${c('/* Khoảng đệm theo size */')}
+  font-size:${size}px;
+  color:#fff;
+  background:linear-gradient(135deg,${c1},${c2});
+  border:none;
+  border-radius:50px;
+  cursor:pointer;
+  font-weight:600;
+  letter-spacing:1px;
+  transition:.3s;
+  box-shadow:0 6px 20px ${c1}66;              ${c('/* Bóng màu theo c1 */')}
+}
+.btn:hover{
+  transform:translateY(-3px);                 ${c('/* Nâng lên khi hover */')}
+  box-shadow:0 10px 30px ${c1}aa;
+}
+.btn:active{transform:translateY(0)}          ${c('/* Nhấn xuống */')}
+</style>
+</head>
+<body>
+<button class="btn">${text}</button>
+</body>
+</html>`;
+      break;
+
+    /* ===== CARD ===== */
+    case 'card':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card</title>
+<style>
+${c('/* Card bo góc, đổ bóng, hover nâng lên */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#1a1f2e,#0f1420);
+  font-family:system-ui,sans-serif;
+  padding:20px;
+}
+.card{
+  max-width:340px;
+  width:100%;
+  background:#171d2b;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid #232b3d;
+  transition:.3s;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+.card:hover{
+  transform:translateY(-6px);
+  border-color:${c1};
+  box-shadow:0 20px 40px ${c1}33;
+}
+.card .top{
+  height:${size*8}px;
+  background:linear-gradient(135deg,${c1},${c2});
+}
+.card .body{padding:20px}
+.card h3{
+  color:#e0e6f0;
+  font-size:1.2em;
+  margin-bottom:8px;
+}
+.card p{
+  color:#8a9bb5;
+  font-size:.9em;
+  line-height:1.6;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top"></div>
+  <div class="body">
+    <h3>${text}</h3>
+    <p>${desc||'Mô tả ngắn về card này.'}</p>
+  </div>
+</div>
+</body>
+</html>`;
+      break;
+
+    /* ===== KÍNH MỜ ===== */
+    case 'glass':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glassmorphism</title>
+<style>
+${c('/* Hiệu ứng kính mờ (glassmorphism) */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,${c1},${c2});
+  font-family:system-ui,sans-serif;
+  padding:20px;
+}
+.glass{
+  padding:40px ${size*2}px;
+  background:rgba(255,255,255,.15);           ${c('/* Trắng mờ 15% */')}
+  backdrop-filter:blur(15px);                 ${c('/* Làm mờ nền phía sau */')}
+  -webkit-backdrop-filter:blur(15px);
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+  color:#fff;
+  text-align:center;
+}
+.glass h2{
+  font-size:1.5em;
+  font-weight:400;
+  letter-spacing:1px;
+  margin-bottom:8px;
+}
+.glass p{opacity:.85;font-size:.9em}
+</style>
+</head>
+<body>
+<div class="glass">
+  <h2>${text}</h2>
+  <p>${desc||'Hiệu ứng kính mờ hiện đại.'}</p>
+</div>
+</body>
+</html>`;
+      break;
+
+    /* ===== GRADIENT ===== */
+    case 'gradient':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gradient</title>
+<style>
+${c('/* Nền gradient chuyển động chậm */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(160deg,${c1},${c2},${c1});
+  background-size:300% 300%;
+  animation:bg 15s ease infinite;
+  font-family:system-ui,sans-serif;
+}
+${c('/* Animation chuyển màu nền */')}
+@keyframes bg{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+h1{
+  font-size:${size*2}px;
+  color:#fff;
+  font-weight:300;
+  letter-spacing:4px;
+  text-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+</style>
+</head>
+<body>
+<h1>${text}</h1>
+</body>
+</html>`;
+      break;
+
+    /* ===== FADE IN ===== */
+    case 'fade':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fade In</title>
+<style>
+${c('/* Hiệu ứng fade in khi tải trang */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+}
+.box{
+  padding:40px ${size*2}px;
+  background:linear-gradient(135deg,${c1},${c2});
+  border-radius:16px;
+  color:#fff;
+  font-size:${size}px;
+  animation:fade 1.5s ease forwards;         ${c('/* Chạy 1 lần, giữ trạng thái cuối */')}
+  opacity:0;
+}
+${c('/* Từ mờ + trượt lên → rõ */')}
+@keyframes fade{
+  from{opacity:0;transform:translateY(30px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+<body>
+<div class="box">${text}</div>
+</body>
+</html>`;
+      break;
+
+    /* ===== NHỊP THỞ ===== */
+    case 'pulse':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulse</title>
+<style>
+${c('/* Vòng tròn phập phồng như nhịp thở */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+}
+.pulse{
+  width:${size*8}px;
+  height:${size*8}px;
+  border-radius:50%;
+  background:radial-gradient(circle,${c1},${c2});
+  box-shadow:0 0 60px ${c1}aa;
+  animation:pulse 4s ease-in-out infinite;    ${c('/* Chu kỳ 4 giây */')}
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:600;
+  letter-spacing:2px;
+}
+${c('/* Phóng to → thu nhỏ theo nhịp */')}
+@keyframes pulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 40px ${c1}88}
+  50%{transform:scale(1.3);box-shadow:0 0 80px ${c1}ff}
+}
+</style>
+</head>
+<body>
+<div class="pulse">${text}</div>
+</body>
+</html>`;
+      break;
+
+    /* ===== SÓNG NƯỚC ===== */
+    case 'wave':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wave</title>
+<style>
+${c('/* Sóng nước động ở đáy trang */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  background:linear-gradient(180deg,${c2},${c1});
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:system-ui,sans-serif;
+}
+h1{color:#fff;font-weight:300;letter-spacing:3px;z-index:2;font-size:${size*2}px}
+.wave{
+  position:absolute;
+  bottom:0;left:0;
+  width:200%;
+  height:${size*10}px;
+  background:rgba(255,255,255,.3);
+  border-radius:45%;
+  animation:wave 12s infinite linear;
+}
+.wave:nth-child(2){
+  background:rgba(255,255,255,.2);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+${c('/* Xoay vòng tròn tạo sóng */')}
+@keyframes wave{
+  0%{transform:translateX(-50%) rotate(0deg)}
+  100%{transform:translateX(-50%) rotate(360deg)}
+}
+</style>
+</head>
+<body>
+<h1>${text}</h1>
+<div class="wave"></div>
+<div class="wave"></div>
+</body>
+</html>`;
+      break;
+
+    /* ===== LOADER ===== */
+    case 'loader':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loader</title>
+<style>
+${c('/* Vòng xoay loading */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+}
+.loader{
+  width:${size*4}px;
+  height:${size*4}px;
+  border:${size/2}px solid ${c1}33;           ${c('/* Vòng nền mờ */')}
+  border-top-color:${c1};                     ${c('/* Vòng sáng quay */')}
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+${c('/* Xoay 360 độ liên tục */')}
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+</style>
+</head>
+<body>
+<div class="loader"></div>
+</body>
+</html>`;
+      break;
+
+    /* ===== ĐỒNG HỒ ===== */
+    case 'clock':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clock</title>
+<style>
+${c('/* Đồng hồ số cập nhật mỗi giây */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+}
+.clock{
+  font-size:${size*4}px;
+  font-weight:200;
+  color:${c1};
+  letter-spacing:4px;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 0 30px ${c1}88;
+  padding:20px 40px;
+  border:1px solid ${c1}44;
+  border-radius:20px;
+  background:rgba(255,255,255,.02);
+}
+</style>
+</head>
+<body>
+<div class="clock" id="clock">00:00:00</div>
+<script>
+${c('// Hàm cập nhật đồng hồ')}
+function tick(){
+  const d=new Date();
+  const h=String(d.getHours()).padStart(2,'0');
+  const m=String(d.getMinutes()).padStart(2,'0');
+  const s=String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent=\`\${h}:\${m}:\${s}\`;
+}
+tick();                          ${c('// Gọi ngay lần đầu')}
+setInterval(tick,1000);          ${c('// Cập nhật mỗi giây')}
+</script>
+</body>
+</html>`;
+      break;
+
+    /* ===== ĐẾM NGƯỢC ===== */
+    case 'countdown':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Countdown</title>
+<style>
+${c('/* Đếm ngược từ số giây cho trước */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+  gap:20px;
+}
+#num{
+  font-size:${size*6}px;
+  font-weight:200;
+  color:${c1};
+  text-shadow:0 0 40px ${c1};
+  font-variant-numeric:tabular-nums;
+}
+button{
+  padding:12px 30px;
+  font-size:1em;
+  color:#fff;
+  background:linear-gradient(135deg,${c1},${c2});
+  border:none;
+  border-radius:40px;
+  cursor:pointer;
+  font-weight:600;
+  letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+<div id="num">${text||'10'}</div>
+<button onclick="start()">Bắt đầu</button>
+<script>
+${c('// Hàm bắt đầu đếm ngược')}
+function start(){
+  let n=parseInt(document.getElementById('num').textContent)||${size};
+  const t=setInterval(()=>{
+    n--;
+    document.getElementById('num').textContent=n;
+    if(n<=0){clearInterval(t);document.getElementById('num').textContent='Hết';}
+  },1000);
+}
+</script>
+</body>
+</html>`;
+      break;
+
+    /* ===== GÕ CHỮ ===== */
+    case 'typing':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typing</title>
+<style>
+${c('/* Hiệu ứng gõ chữ từng ký tự */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:Consolas,monospace;
+}
+#txt{
+  font-size:${size*1.8}px;
+  color:${c1};
+  border-right:3px solid ${c1};            ${c('/* Con trỏ nhấp nháy */')}
+  padding-right:6px;
+  white-space:nowrap;
+  overflow:hidden;
+  animation:blink .8s infinite;
+  letter-spacing:1px;
+}
+${c('/* Con trỏ nhấp nháy */')}
+@keyframes blink{
+  50%{border-color:transparent}
+}
+</style>
+</head>
+<body>
+<span id="txt"></span>
+<script>
+${c('// Câu cần gõ')}
+const text="${text}";
+let i=0;
+${c('// Gõ từng ký tự mỗi 80ms')}
+function type(){
+  if(i<text.length){
+    document.getElementById('txt').textContent+=text[i];
+    i++;
+    setTimeout(type,80);
+  }
+}
+type();
+</script>
+</body>
+</html>`;
+      break;
+
+    /* ===== LỜI NHẮC ===== */
+    case 'quote':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quote</title>
+<style>
+${c('/* Hiển thị lời nhắc ngẫu nhiên */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,${c2},${c1});
+  font-family:system-ui,sans-serif;
+  padding:20px;
+  gap:24px;
+}
+.quote{
+  max-width:520px;
+  text-align:center;
+  font-size:${size*1.3}px;
+  color:#fff;
+  font-style:italic;
+  line-height:1.6;
+  min-height:80px;
+  transition:.5s;
+  text-shadow:0 2px 10px rgba(0,0,0,.2);
+}
+button{
+  padding:12px 30px;
+  font-size:.95em;
+  color:${c1};
+  background:#fff;
+  border:none;
+  border-radius:40px;
+  cursor:pointer;
+  font-weight:600;
+  letter-spacing:1px;
+  box-shadow:0 6px 20px rgba(0,0,0,.15);
+}
+button:hover{transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<p class="quote" id="q">${text}</p>
+<button onclick="next()">Lời nhắc mới</button>
+<script>
+${c('// Danh sách lời nhắc')}
+const list=[
+"${text}",
+"Hít thở sâu, mọi chuyện rồi sẽ ổn.",
+"Bạn mạnh mẽ hơn bạn nghĩ.",
+"Mỗi ngày là một khởi đầu mới.",
+"Hãy dịu dàng với chính mình."
+];
+let i=0;
+${c('// Đổi lời nhắc có hiệu ứng')}
+function next(){
+  const el=document.getElementById('q');
+  el.style.opacity=0;
+  setTimeout(()=>{
+    i=(i+1)%list.length;
+    el.textContent=list[i];
+    el.style.opacity=1;
+  },300);
+}
+</script>
+</body>
+</html>`;
+      break;
+
+    /* ===== POMODORO ===== */
+    case 'timer':
+      code=`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pomodoro</title>
+<style>
+${c('/* Đồng hồ Pomodoro 25 phút làm việc / 5 phút nghỉ */')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:#0f1420;
+  font-family:system-ui,sans-serif;
+  gap:24px;
+}
+#time{
+  font-size:${size*5}px;
+  font-weight:200;
+  color:${c1};
+  letter-spacing:4px;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 0 40px ${c1}aa;
+}
+#label{color:#8a9bb5;font-size:1em;letter-spacing:2px}
+.row{display:flex;gap:10px}
+button{
+  padding:11px 26px;
+  font-size:.9em;
+  color:#fff;
+  background:linear-gradient(135deg,${c1},${c2});
+  border:none;
+  border-radius:40px;
+  cursor:pointer;
+  font-weight:600;
+  letter-spacing:1px;
+}
+button.ghost{background:transparent;color:${c1};border:1.5px solid ${c1}}
+</style>
+</head>
+<body>
+<div id="label">LÀM VIỆC</div
